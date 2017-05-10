@@ -7,16 +7,13 @@ function sanitizeData(colId, tgtString) {
   var numRows = sheet.getLastRow();   // Number of rows to process
   var dataRange = sheet.getRange(startRow, colId, numRows, 1);
   var data = dataRange.getValues();
-  var newData = [];
-  for (var i = 0; i < data.length; i++) {
-    var productName = data[i][0];
-    // Logger.log(productName);
-    if (productName.indexOf(tgtString) === -1) {
-      newData.push([productName]);
+  var newData = data.map(function(item) {
+    if(item[0].indexOf(tgtString) === -1) {
+      return item;
     } else {
-      newData.push([productName.slice(tgtString.length)]);
+      return ([item[0].slice(tgtString.length)]);
     }
-  }
-  // Logger.log(newData);
+  });
+  Logger.log(newData);
   dataRange.setValues(newData);
 }
