@@ -17,3 +17,8 @@ function sanitizeData(colId, tgtString) {
   Logger.log(newData);
   dataRange.setValues(newData);
 }
+
+function splitData() {
+  var sheet = SpreadsheetApp.getActiveSheet();
+  SpreadsheetApp.getUi().alert('Yes?');
+}
