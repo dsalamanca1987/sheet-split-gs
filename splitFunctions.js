@@ -35,12 +35,30 @@ function runSplit() {
   // Process the user's response.
   //if (response == ui.Button.YES) {
   var dataObject = getSplitData(getData());
+  Logger.log('count', countData(dataObject));
+  var count = 0;
   //Logger.log(dataObject);
-  var singleData = getDataByName(dataObject, "Pic Collage - Photo Collage Maker & Picture Editor");
-  Logger.log(JSON.stringify(singleData));
-  
-  //}
+  for (var productName in dataObject) {
+    count++;
+    var productData = dataObject[productName];
+    var error = createSplitSheets(productName, productData);
+    if (error) {
+      Logger.log(error + ' was not successfully added,\n' + count + ' successful products added.');
+      return error;
+    }
+  }
+  Logger.log(count + ' successful products added.');
   return;
+}
+
+function countData(dataObj) {
+  dataObj = dataObj || getSplitData(getData());
+  var count = 0;
+  for(var prop in dataObj) {
+    count++;
+  }
+  Logger.log(count);
+  return count;
 }
 
 function getSplitData(data, colId) {
@@ -57,6 +75,18 @@ function getSplitData(data, colId) {
   return dataObj;
 }
 
-function getDataByName(dataObj, name) {
-  return dataObj[name];
+function createSplitSheets(sheetName, data) {
+  var ss = SpreadsheetApp.getActiveSpreadsheet();
+  if (ss.getSheetByName(sheetName)) {
+    return false;
+  }
+  try {
+    var sheet = ss.insertSheet(sheetName);
+  } catch(e) {
+    return sheetName;
+  }
+  var numRows = data.length;
+  var numCols = data[0].length;
+  var range = sheet.getRange(1, 1, numRows, numCols);
+  range.setValues(data);
 }
