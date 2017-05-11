@@ -28,24 +28,26 @@ function getData(sheet) {
   return dataRange.getValues();
 }
 
-function runSplit() {
+function runSplit(dataObj) {
   var sheet = SpreadsheetApp.getActiveSheet();
   //var ui = SpreadsheetApp.getUi();
   //var response = ui.alert('Are you sure you want to proceed?');
   // Process the user's response.
   //if (response == ui.Button.YES) {
-  var dataObject = getSplitData(getData());
-  Logger.log('count', countData(dataObject));
+  dataObj = dataObj || getSplitData(getData());
+  Logger.log('count', countData(dataObj));
   var count = 0;
   //Logger.log(dataObject);
-  for (var productName in dataObject) {
-    count++;
-    var productData = dataObject[productName];
-    var error = createSplitSheets(productName, productData);
+  for (var productName in dataObj) {
+    var productData = dataObj[productName];
+    var error = createSplitSheet(productName, productData);
     if (error) {
       Logger.log(error + ' was not successfully added,\n' + count + ' successful products added.');
-      return error;
+      handleCellOverload(count, dataObj);
+      return;
+      //return error;
     }
+    count++;
   }
   Logger.log(count + ' successful products added.');
   return;
@@ -75,8 +77,8 @@ function getSplitData(data, colId) {
   return dataObj;
 }
 
-function createSplitSheets(sheetName, data) {
-  var ss = SpreadsheetApp.getActiveSpreadsheet();
+function createSplitSheet(sheetName, data, spreadsheet) {
+  ss = spreadsheet || SpreadsheetApp.getActiveSpreadsheet();
   if (ss.getSheetByName(sheetName)) {
     return false;
   }
@@ -89,4 +91,24 @@ function createSplitSheets(sheetName, data) {
   var numCols = data[0].length;
   var range = sheet.getRange(1, 1, numRows, numCols);
   range.setValues(data);
+}
+
+function handleCellOverload(successCount, dataObj) {
+  var ssName = SpreadsheetApp.getActive().getName();
+  var ss = SpreadsheetApp.create(ssName + '__overload');
+  var count = 0;
+  dataObj = dataObj || getSplitData(getData());
+  for(var productName in dataObj) {
+    if (count < successCount) {
+      count++;
+    } else {
+      var error = createSplitSheet(productName, dataObj[productName], ss);
+      if (error) {
+        Logger.log(error + ' was not successfully added,\n' + count + ' successful products added.');
+        handleCellOverload(count, dataObj);
+        return;
+        //return error;
+      }
+    }
+  }
 }
